@@ -6,6 +6,7 @@ import com.supportforge.config.QdrantProperties;
 import com.supportforge.retrieval.HybridRetrievalPort;
 import com.supportforge.retrieval.HybridSearchHit;
 import com.supportforge.retrieval.HybridSearchRequest;
+import com.supportforge.retrieval.RetrievalMode;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
@@ -134,21 +135,29 @@ public class QdrantVectorIndexAdapter
             throw new IllegalArgumentException("查询索引版本与Qdrant不一致");
         }
         Map<String, Object> filter = searchFilter(search);
-        Map<String, Object> dense = new LinkedHashMap<>();
-        dense.put("query", search.denseVector());
-        dense.put("using", properties.denseVectorName());
-        dense.put("filter", filter);
-        dense.put("limit", search.candidateLimit());
-
-        Map<String, Object> lexical = new LinkedHashMap<>();
-        lexical.put("query", Map.of("text", search.queryText()));
-        lexical.put("using", "content");
-        lexical.put("filter", filter);
-        lexical.put("limit", search.candidateLimit());
-
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("prefetch", List.of(dense, lexical));
-        body.put("query", Map.of("rrf", Map.of("k", search.rrfK())));
+        if (search.mode() == RetrievalMode.DENSE) {
+            body.put("query", search.denseVector());
+            body.put("using", properties.denseVectorName());
+        } else if (search.mode() == RetrievalMode.BM25) {
+            body.put("query", Map.of("text", search.queryText()));
+            body.put("using", "content");
+        } else {
+            Map<String, Object> dense = new LinkedHashMap<>();
+            dense.put("query", search.denseVector());
+            dense.put("using", properties.denseVectorName());
+            dense.put("filter", filter);
+            dense.put("limit", search.candidateLimit());
+
+            Map<String, Object> lexical = new LinkedHashMap<>();
+            lexical.put("query", Map.of("text", search.queryText()));
+            lexical.put("using", "content");
+            lexical.put("filter", filter);
+            lexical.put("limit", search.candidateLimit());
+
+            body.put("prefetch", List.of(dense, lexical));
+            body.put("query", Map.of("rrf", Map.of("k", search.rrfK())));
+        }
         body.put("filter", filter);
         body.put("limit", search.limit());
         body.put("with_payload", true);
@@ -160,6 +169,34 @@ public class QdrantVectorIndexAdapter
                 false
         );
         return decodeHits(response.body());
+    }
+
+    /** Returns the exact number of active points for one tenant and index version. */
+    public long countPoints(UUID tenantId, String indexVersion) {
+        if (tenantId == null || indexVersion == null || indexVersion.isBlank()) {
+            throw new IllegalArgumentException("计数租户和索引版本不能为空");
+        }
+        if (!ready) {
+            ensureReady();
+        }
+        Map<String, Object> filter = Map.of("must", List.of(
+                match("tenant_id", tenantId.toString()),
+                match("index_version", indexVersion.strip()),
+                match("active", true)
+        ));
+        HttpResult response = request(
+                "POST",
+                collectionPath() + "/points/count",
+                Map.of("filter", filter, "exact", true),
+                false
+        );
+        Map<?, ?> root = parseObject(response.body(), "Count响应");
+        Map<?, ?> result = requireMap(root.get("result"), "result");
+        Object count = result.get("count");
+        if (!(count instanceof Number number) || number.longValue() < 0) {
+            throw new IllegalStateException("Qdrant Count响应缺少合法result.count");
+        }
+        return number.longValue();
     }
 
     private void createCollection() {

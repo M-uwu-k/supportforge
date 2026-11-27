@@ -14,7 +14,8 @@ public record HybridSearchRequest(
         int candidateLimit,
         int limit,
         int rrfK,
-        Set<UUID> excludedPointIds
+        Set<UUID> excludedPointIds,
+        RetrievalMode mode
 ) {
 
 
@@ -22,7 +23,15 @@ public record HybridSearchRequest(
                                Set<String> categories, String indexVersion,
                                int candidateLimit, int limit, int rrfK) {
         this(tenantId, queryText, denseVector, categories, indexVersion,
-                candidateLimit, limit, rrfK, Set.of());
+                candidateLimit, limit, rrfK, Set.of(), RetrievalMode.HYBRID_RRF);
+    }
+
+    public HybridSearchRequest(UUID tenantId, String queryText, List<Float> denseVector,
+                               Set<String> categories, String indexVersion,
+                               int candidateLimit, int limit, int rrfK,
+                               Set<UUID> excludedPointIds) {
+        this(tenantId, queryText, denseVector, categories, indexVersion,
+                candidateLimit, limit, rrfK, excludedPointIds, RetrievalMode.HYBRID_RRF);
     }
 
     public HybridSearchRequest {
@@ -44,6 +53,7 @@ public record HybridSearchRequest(
         }
         categories = categories == null ? Set.of() : Set.copyOf(categories);
         excludedPointIds = excludedPointIds == null ? Set.of() : Set.copyOf(excludedPointIds);
+        mode = mode == null ? RetrievalMode.HYBRID_RRF : mode;
         for (String category : categories) {
             if (category == null || category.isBlank()) {
                 throw new IllegalArgumentException("分类过滤值不能为空");

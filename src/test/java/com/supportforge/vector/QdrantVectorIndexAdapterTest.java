@@ -5,6 +5,7 @@ import com.sun.net.httpserver.HttpServer;
 import com.supportforge.config.EmbeddingProperties;
 import com.supportforge.config.FeatureFlagProperties;
 import com.supportforge.config.QdrantProperties;
+import com.supportforge.retrieval.RetrievalMode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
@@ -213,6 +214,38 @@ class QdrantVectorIndexAdapterTest {
         assertEquals(excluded.toString(), json.at("/filter/must_not/0/has_id/0").asText());
         assertEquals(json.get("filter"), json.at("/prefetch/0/filter"));
         assertEquals(json.get("filter"), json.at("/prefetch/1/filter"));
+    }
+
+    @Test
+    void sendsIndependentDenseAndBm25QueriesForAblation() throws Exception {
+        List<String> bodies = new CopyOnWriteArrayList<>();
+        startServer(exchange -> {
+            if (exchange.getRequestMethod().equals("GET")) {
+                respond(exchange, 404, "{\"status\":\"not found\"}");
+            } else if (exchange.getRequestMethod().equals("POST")) {
+                bodies.add(readBody(exchange));
+                respond(exchange, 200, "{\"result\":{\"points\":[]},\"status\":\"ok\"}");
+            } else {
+                respond(exchange, 200, "{\"result\":true,\"status\":\"ok\"}");
+            }
+        });
+        QdrantVectorIndexAdapter adapter = adapter(4);
+        UUID tenant = UUID.randomUUID();
+        adapter.search(new com.supportforge.retrieval.HybridSearchRequest(
+                tenant, "query", List.of(1f, 0f, 0f, 0f), Set.of(),
+                "index-v1", 20, 5, 60, Set.of(), RetrievalMode.DENSE
+        ));
+        adapter.search(new com.supportforge.retrieval.HybridSearchRequest(
+                tenant, "query", List.of(1f, 0f, 0f, 0f), Set.of(),
+                "index-v1", 20, 5, 60, Set.of(), RetrievalMode.BM25
+        ));
+
+        assertEquals(2, bodies.size());
+        assertTrue(bodies.get(0).contains("\"using\":\"dense\""));
+        assertTrue(!bodies.get(0).contains("\"prefetch\""));
+        assertTrue(bodies.get(1).contains("\"using\":\"content\""));
+        assertTrue(bodies.get(1).contains("\"text\":\"query\""));
+        assertTrue(!bodies.get(1).contains("\"prefetch\""));
     }
 
     private QdrantProperties properties(int dimensions) {

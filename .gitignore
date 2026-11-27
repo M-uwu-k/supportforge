@@ -10,6 +10,9 @@ backups/
 *.p12
 *.pfx
 *.jks
+.venv-benchmark/
+__pycache__/
+*.pyc
 
 # Java build and IDE files
 target/

@@ -146,6 +146,19 @@ supportforge:
     timeout: ${SUPPORTFORGE_RERANKER_TIMEOUT:20s}
     fail-open: ${SUPPORTFORGE_RERANKER_FAIL_OPEN:true}
 
+  # Public evaluation data stays in an isolated Qdrant collection.
+  public-benchmark:
+    dataset-id: ${SUPPORTFORGE_PUBLIC_BENCHMARK_DATASET_ID:c-mteb-ecom-retrieval}
+    dataset-revision: ${SUPPORTFORGE_PUBLIC_BENCHMARK_DATASET_REVISION:687de13dc7294d6fd9be10c6945f9e8fec8166b9+39c90699b034ec22ac45b3abf5b0bbb5ffd421f9}
+    collection: ${SUPPORTFORGE_PUBLIC_BENCHMARK_COLLECTION:supportforge_benchmark_ecom_qwen37_v1}
+    index-version: ${SUPPORTFORGE_PUBLIC_BENCHMARK_INDEX_VERSION:ecom-qwen37-v1}
+    tenant-id: ${SUPPORTFORGE_PUBLIC_BENCHMARK_TENANT_ID:00000000-0000-0000-0000-00000000ec01}
+    candidate-limit: ${SUPPORTFORGE_PUBLIC_BENCHMARK_CANDIDATE_LIMIT:100}
+    final-limit: ${SUPPORTFORGE_PUBLIC_BENCHMARK_FINAL_LIMIT:10}
+    rrf-k: ${SUPPORTFORGE_PUBLIC_BENCHMARK_RRF_K:60}
+    maximum-import-batch: ${SUPPORTFORGE_PUBLIC_BENCHMARK_MAXIMUM_IMPORT_BATCH:256}
+    maximum-queries: ${SUPPORTFORGE_PUBLIC_BENCHMARK_MAXIMUM_QUERIES:5000}
+
   grounding:
     maximum-evidence: ${SUPPORTFORGE_GROUNDING_MAXIMUM_EVIDENCE:5}
     minimum-evidence: ${SUPPORTFORGE_GROUNDING_MINIMUM_EVIDENCE:1}
