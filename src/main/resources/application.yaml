@@ -1,0 +1,302 @@
+spring:
+  application:
+    name: supportforge
+  profiles:
+    default: local
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+  servlet:
+    multipart:
+      max-file-size: ${SUPPORTFORGE_MULTIPART_MAX_FILE_SIZE:2MB}
+      max-request-size: ${SUPPORTFORGE_MULTIPART_MAX_REQUEST_SIZE:3MB}
+
+server:
+  port: ${SERVER_PORT:7000}
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+  otlp:
+    metrics:
+      export:
+        enabled: false
+
+
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      environment: ${supportforge.deployment.environment}
+  tracing:
+    sampling:
+      probability: ${SUPPORTFORGE_TRACING_SAMPLE_PROBABILITY:0.10}
+    export:
+      otlp:
+        enabled: ${SUPPORTFORGE_OTLP_TRACING_ENABLED:false}
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${SUPPORTFORGE_OTLP_TRACING_ENDPOINT:http://localhost:4318/v1/traces}
+
+supportforge:
+  auth:
+    required: ${SUPPORTFORGE_AUTH_REQUIRED:false}
+    credentials-json: ${SUPPORTFORGE_AUTH_CREDENTIALS_JSON:[]}
+  deployment:
+    environment: local
+    instance-id: ${SUPPORTFORGE_INSTANCE_ID:${HOSTNAME:local-instance}}
+
+  persistence:
+    intent-learning: ${SUPPORTFORGE_PERSISTENCE_INTENT_LEARNING:json}
+    knowledge: ${SUPPORTFORGE_PERSISTENCE_KNOWLEDGE:json}
+    memory: ${SUPPORTFORGE_PERSISTENCE_MEMORY:json}
+    feedback: ${SUPPORTFORGE_PERSISTENCE_FEEDBACK:json}
+    evaluation: ${SUPPORTFORGE_PERSISTENCE_EVALUATION:json}
+    default-tenant-id: ${SUPPORTFORGE_DEFAULT_TENANT_ID:00000000-0000-0000-0000-000000000001}
+
+  database:
+    url: ${SUPPORTFORGE_POSTGRES_URL:}
+    username: ${SUPPORTFORGE_POSTGRES_USERNAME:}
+    password: ${SUPPORTFORGE_POSTGRES_PASSWORD:}
+    schema: ${SUPPORTFORGE_POSTGRES_SCHEMA:supportforge}
+    maximum-pool-size: ${SUPPORTFORGE_POSTGRES_MAXIMUM_POOL_SIZE:10}
+    minimum-idle: ${SUPPORTFORGE_POSTGRES_MINIMUM_IDLE:1}
+    connection-timeout: ${SUPPORTFORGE_POSTGRES_CONNECTION_TIMEOUT:5s}
+    migration-enabled: ${SUPPORTFORGE_POSTGRES_MIGRATION_ENABLED:true}
+
+  object-storage:
+    provider: ${SUPPORTFORGE_OBJECT_STORAGE_PROVIDER:filesystem}
+    endpoint: ${SUPPORTFORGE_OBJECT_STORAGE_ENDPOINT:}
+    access-key: ${SUPPORTFORGE_OBJECT_STORAGE_ACCESS_KEY:}
+    secret-key: ${SUPPORTFORGE_OBJECT_STORAGE_SECRET_KEY:}
+    bucket: ${SUPPORTFORGE_OBJECT_STORAGE_BUCKET:supportforge-knowledge}
+    region: ${SUPPORTFORGE_OBJECT_STORAGE_REGION:us-east-1}
+    auto-create-bucket: ${SUPPORTFORGE_OBJECT_STORAGE_AUTO_CREATE_BUCKET:true}
+    filesystem-root: ${SUPPORTFORGE_OBJECT_STORAGE_FILESYSTEM_ROOT:data/object-storage}
+
+  llm:
+    provider: ${SUPPORTFORGE_LLM_PROVIDER:mock}
+    model: ${SUPPORTFORGE_LLM_MODEL:mock-v1}
+    chat-url: ${SUPPORTFORGE_LLM_CHAT_URL:http://localhost:11434/v1/chat/completions}
+    api-key: ${SUPPORTFORGE_LLM_API_KEY:}
+    thinking-mode: ${SUPPORTFORGE_LLM_THINKING_MODE:}
+    chat-max-tokens: ${SUPPORTFORGE_LLM_CHAT_MAX_TOKENS:4096}
+    specialist-max-tokens: ${SUPPORTFORGE_LLM_SPECIALIST_MAX_TOKENS:2048}
+    intent-max-tokens: ${SUPPORTFORGE_LLM_INTENT_MAX_TOKENS:1024}
+    judge-max-tokens: ${SUPPORTFORGE_LLM_JUDGE_MAX_TOKENS:2048}
+    connect-timeout: ${SUPPORTFORGE_LLM_CONNECT_TIMEOUT:10s}
+    read-timeout: ${SUPPORTFORGE_LLM_READ_TIMEOUT:120s}
+    enhance-specialists: ${SUPPORTFORGE_LLM_ENHANCE_SPECIALISTS:true}
+
+  embedding:
+    provider: ${SUPPORTFORGE_EMBEDDING_PROVIDER:mock}
+    model: ${SUPPORTFORGE_EMBEDDING_MODEL:Qwen/Qwen3-Embedding-0.6B}
+    model-version: ${SUPPORTFORGE_EMBEDDING_MODEL_VERSION:qwen3-embedding-v1}
+    endpoint: ${SUPPORTFORGE_EMBEDDING_ENDPOINT:http://localhost:8000/v1/embeddings}
+    api-key: ${SUPPORTFORGE_EMBEDDING_API_KEY:}
+    dimensions: ${SUPPORTFORGE_EMBEDDING_DIMENSIONS:1024}
+    batch-size: ${SUPPORTFORGE_EMBEDDING_BATCH_SIZE:10}
+    timeout: ${SUPPORTFORGE_EMBEDDING_TIMEOUT:30s}
+    normalize: ${SUPPORTFORGE_EMBEDDING_NORMALIZE:true}
+    query-instruction: ${SUPPORTFORGE_EMBEDDING_QUERY_INSTRUCTION:Given a customer support search query, retrieve relevant passages that answer the query}
+
+  qdrant:
+    provider: ${SUPPORTFORGE_QDRANT_PROVIDER:memory}
+    endpoint: ${SUPPORTFORGE_QDRANT_ENDPOINT:http://localhost:6333}
+    api-key: ${SUPPORTFORGE_QDRANT_API_KEY:}
+    collection: ${SUPPORTFORGE_QDRANT_COLLECTION:supportforge_knowledge_v1}
+    dense-vector-name: ${SUPPORTFORGE_QDRANT_DENSE_VECTOR_NAME:qwen3_dense}
+    index-version: ${SUPPORTFORGE_QDRANT_INDEX_VERSION:knowledge-qwen3-v1}
+    dimensions: ${SUPPORTFORGE_QDRANT_DIMENSIONS:1024}
+    distance: ${SUPPORTFORGE_QDRANT_DISTANCE:Cosine}
+    shard-number: ${SUPPORTFORGE_QDRANT_SHARD_NUMBER:1}
+    replication-factor: ${SUPPORTFORGE_QDRANT_REPLICATION_FACTOR:1}
+    write-consistency-factor: ${SUPPORTFORGE_QDRANT_WRITE_CONSISTENCY_FACTOR:1}
+    upsert-batch-size: ${SUPPORTFORGE_QDRANT_UPSERT_BATCH_SIZE:64}
+    timeout: ${SUPPORTFORGE_QDRANT_TIMEOUT:10s}
+
+  retrieval:
+    candidate-limit: ${SUPPORTFORGE_RETRIEVAL_CANDIDATE_LIMIT:100}
+    default-limit: ${SUPPORTFORGE_RETRIEVAL_DEFAULT_LIMIT:8}
+    maximum-limit: ${SUPPORTFORGE_RETRIEVAL_MAXIMUM_LIMIT:50}
+    rrf-k: ${SUPPORTFORGE_RETRIEVAL_RRF_K:60}
+
+  reranker:
+    provider: ${SUPPORTFORGE_RERANKER_PROVIDER:mock}
+    model: ${SUPPORTFORGE_RERANKER_MODEL:Qwen/Qwen3-Reranker-0.6B}
+    model-version: ${SUPPORTFORGE_RERANKER_MODEL_VERSION:qwen3-reranker-v1}
+    endpoint: ${SUPPORTFORGE_RERANKER_ENDPOINT:http://localhost:8001/v1/rerank}
+    api-key: ${SUPPORTFORGE_RERANKER_API_KEY:}
+    batch-size: ${SUPPORTFORGE_RERANKER_BATCH_SIZE:32}
+    candidate-limit: ${SUPPORTFORGE_RERANKER_CANDIDATE_LIMIT:30}
+    minimum-score: ${SUPPORTFORGE_RERANKER_MINIMUM_SCORE:0.0}
+    timeout: ${SUPPORTFORGE_RERANKER_TIMEOUT:20s}
+    fail-open: ${SUPPORTFORGE_RERANKER_FAIL_OPEN:true}
+
+  grounding:
+    maximum-evidence: ${SUPPORTFORGE_GROUNDING_MAXIMUM_EVIDENCE:5}
+    minimum-evidence: ${SUPPORTFORGE_GROUNDING_MINIMUM_EVIDENCE:1}
+    minimum-rerank-score: ${SUPPORTFORGE_GROUNDING_MINIMUM_RERANK_SCORE:0.12}
+    minimum-query-coverage: ${SUPPORTFORGE_GROUNDING_MINIMUM_QUERY_COVERAGE:0.30}
+    refusal-message: ${SUPPORTFORGE_GROUNDING_REFUSAL_MESSAGE:当前知识库没有足够证据回答这个问题，请补充信息或转人工客服。}
+
+  cache:
+    maximum-entries: ${SUPPORTFORGE_CACHE_MAXIMUM_ENTRIES:10000}
+    l1-ttl: ${SUPPORTFORGE_CACHE_L1_TTL:30s}
+    l2-ttl: ${SUPPORTFORGE_CACHE_L2_TTL:10m}
+    valkey-uri: ${SUPPORTFORGE_VALKEY_URI:redis://localhost:6379}
+    namespace: ${SUPPORTFORGE_CACHE_NAMESPACE:supportforge:v1}
+
+  resilience:
+    dependency-timeout: ${SUPPORTFORGE_DEPENDENCY_TIMEOUT:2s}
+    circuit-failure-threshold: ${SUPPORTFORGE_CIRCUIT_FAILURE_THRESHOLD:3}
+    circuit-open-duration: ${SUPPORTFORGE_CIRCUIT_OPEN_DURATION:10s}
+    maximum-concurrent-calls: ${SUPPORTFORGE_MAXIMUM_CONCURRENT_CALLS:50}
+    rate-limit-requests: ${SUPPORTFORGE_RATE_LIMIT_REQUESTS:100}
+    rate-limit-window: ${SUPPORTFORGE_RATE_LIMIT_WINDOW:1m}
+
+  slo:
+    availability-target: ${SUPPORTFORGE_SLO_AVAILABILITY_TARGET:0.99}
+    latency-target-ms: ${SUPPORTFORGE_SLO_LATENCY_TARGET_MS:2000}
+
+  quality-gate:
+    recall-at-k: ${SUPPORTFORGE_QUALITY_RECALL_AT_K:0.85}
+    decision-accuracy: ${SUPPORTFORGE_QUALITY_DECISION_ACCURACY:0.95}
+    grounded-answer-rate: ${SUPPORTFORGE_QUALITY_GROUNDED_ANSWER_RATE:0.95}
+    citation-precision: ${SUPPORTFORGE_QUALITY_CITATION_PRECISION:0.98}
+    refusal-accuracy: ${SUPPORTFORGE_QUALITY_REFUSAL_ACCURACY:0.98}
+
+  migration:
+    source-root: ${SUPPORTFORGE_MIGRATION_SOURCE_ROOT:data}
+    maximum-file-bytes: ${SUPPORTFORGE_MIGRATION_MAXIMUM_FILE_BYTES:104857600}
+
+  outbox:
+    claim-batch-size: ${SUPPORTFORGE_OUTBOX_CLAIM_BATCH_SIZE:50}
+    lease-duration: ${SUPPORTFORGE_OUTBOX_LEASE_DURATION:30s}
+    maximum-attempts: ${SUPPORTFORGE_OUTBOX_MAXIMUM_ATTEMPTS:10}
+    initial-retry-delay: ${SUPPORTFORGE_OUTBOX_INITIAL_RETRY_DELAY:1s}
+    maximum-retry-delay: ${SUPPORTFORGE_OUTBOX_MAXIMUM_RETRY_DELAY:5m}
+
+  kafka:
+    bootstrap-servers: ${SUPPORTFORGE_KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    knowledge-topic: ${SUPPORTFORGE_KAFKA_KNOWLEDGE_TOPIC:supportforge.knowledge.index.v1}
+    dead-letter-topic: ${SUPPORTFORGE_KAFKA_DLT_TOPIC:supportforge.knowledge.index.v1.dlt}
+    consumer-group: ${SUPPORTFORGE_KAFKA_CONSUMER_GROUP:supportforge-knowledge-indexer-v1}
+    client-id: ${SUPPORTFORGE_KAFKA_CLIENT_ID:${spring.application.name}-${supportforge.deployment.instance-id}}
+    partitions: ${SUPPORTFORGE_KAFKA_PARTITIONS:6}
+    replication-factor: ${SUPPORTFORGE_KAFKA_REPLICATION_FACTOR:1}
+    outbox-poll-delay: ${SUPPORTFORGE_KAFKA_OUTBOX_POLL_DELAY:1s}
+    send-timeout: ${SUPPORTFORGE_KAFKA_SEND_TIMEOUT:10s}
+    consumer-retry-delay: ${SUPPORTFORGE_KAFKA_CONSUMER_RETRY_DELAY:2s}
+    consumer-maximum-attempts: ${SUPPORTFORGE_KAFKA_CONSUMER_MAXIMUM_ATTEMPTS:5}
+    worker-lease-duration: ${SUPPORTFORGE_KAFKA_WORKER_LEASE_DURATION:2m}
+
+  intent:
+    learning:
+      storage-path: ${SUPPORTFORGE_INTENT_LEARNING_STORAGE_PATH:data/intent-learning.json}
+
+      max-samples: ${SUPPORTFORGE_INTENT_LEARNING_MAX_SAMPLES:1000}
+
+    cache:
+      max-entries: ${SUPPORTFORGE_INTENT_CACHE_MAX_ENTRIES:1000}
+
+      trim-entries: ${SUPPORTFORGE_INTENT_CACHE_TRIM_ENTRIES:500}
+
+    fusion:
+      llm-weight: ${SUPPORTFORGE_INTENT_LLM_WEIGHT:0.70}
+      embedding-weight: ${SUPPORTFORGE_INTENT_EMBEDDING_WEIGHT:0.20}
+      pattern-weight: ${SUPPORTFORGE_INTENT_PATTERN_WEIGHT:0.10}
+
+      confidence-threshold: ${SUPPORTFORGE_INTENT_CONFIDENCE_THRESHOLD:0.50}
+
+    embedding:
+      dimensions: ${SUPPORTFORGE_INTENT_EMBEDDING_DIMENSIONS:256}
+
+    llm:
+      enabled: ${SUPPORTFORGE_INTENT_LLM_ENABLED:true}
+
+  knowledge:
+    storage-path: ${SUPPORTFORGE_KNOWLEDGE_STORAGE_PATH:data/knowledge-documents.json}
+
+    retrieval:
+      max-queries: ${SUPPORTFORGE_KNOWLEDGE_MAX_QUERIES:4}
+      semantic-dimensions: ${SUPPORTFORGE_KNOWLEDGE_SEMANTIC_DIMENSIONS:256}
+
+      semantic-weight: ${SUPPORTFORGE_KNOWLEDGE_SEMANTIC_WEIGHT:2.0}
+
+      minimum-semantic-score: ${SUPPORTFORGE_KNOWLEDGE_MINIMUM_SEMANTIC_SCORE:0.45}
+
+      rerank:
+        exact-phrase-bonus: ${SUPPORTFORGE_KNOWLEDGE_RERANK_EXACT_BONUS:1.0}
+
+        title-overlap-weight: ${SUPPORTFORGE_KNOWLEDGE_RERANK_TITLE_WEIGHT:0.8}
+
+        keyword-coverage-weight: ${SUPPORTFORGE_KNOWLEDGE_RERANK_KEYWORD_WEIGHT:0.15}
+
+    import:
+      maximum-file-bytes: ${SUPPORTFORGE_KNOWLEDGE_IMPORT_MAXIMUM_FILE_BYTES:1048576}
+
+    ingestion:
+      maximum-chunk-chars: ${SUPPORTFORGE_KNOWLEDGE_MAXIMUM_CHUNK_CHARS:800}
+      minimum-chunk-chars: ${SUPPORTFORGE_KNOWLEDGE_MINIMUM_CHUNK_CHARS:120}
+      overlap-chars: ${SUPPORTFORGE_KNOWLEDGE_CHUNK_OVERLAP_CHARS:120}
+      parser-version: ${SUPPORTFORGE_KNOWLEDGE_PARSER_VERSION:text-clean-v1}
+      chunker-version: ${SUPPORTFORGE_KNOWLEDGE_CHUNKER_VERSION:stable-boundary-v1}
+
+  skills:
+    root: ${SUPPORTFORGE_SKILLS_ROOT:skills}
+    max-prompt-chars: ${SUPPORTFORGE_SKILLS_MAX_PROMPT_CHARS:5000}
+
+  evaluation:
+    report-path: ${SUPPORTFORGE_EVALUATION_REPORT_PATH:data/evaluation-reports.json}
+    max-history: ${SUPPORTFORGE_EVALUATION_MAX_HISTORY:50}
+    
+  feedback:
+    storage-path: ${SUPPORTFORGE_FEEDBACK_STORAGE_PATH:data/feedback.json}
+    max-records: ${SUPPORTFORGE_FEEDBACK_MAX_RECORDS:1000}
+
+
+  memory:
+    storage-path: ${SUPPORTFORGE_MEMORY_STORAGE_PATH:data/conversation-memory.json}
+
+    max-conversations: ${SUPPORTFORGE_MEMORY_MAX_CONVERSATIONS:1000}
+
+    max-messages: ${SUPPORTFORGE_MEMORY_MAX_MESSAGES:12}
+
+    compression-batch-size: ${SUPPORTFORGE_MEMORY_COMPRESSION_BATCH_SIZE:4}
+
+    episodes:
+      max-results: ${SUPPORTFORGE_MEMORY_EPISODE_MAX_RESULTS:3}
+      minimum-score: ${SUPPORTFORGE_MEMORY_EPISODE_MINIMUM_SCORE:0.15}
+
+    summary:
+      llm-enabled: ${SUPPORTFORGE_MEMORY_SUMMARY_LLM_ENABLED:false}
+
+      max-chars: ${SUPPORTFORGE_MEMORY_SUMMARY_MAX_CHARS:2000}
+
+      max-tokens: ${SUPPORTFORGE_MEMORY_SUMMARY_MAX_TOKENS:1024}
+
+    history:
+      enabled: ${SUPPORTFORGE_MEMORY_HISTORY_ENABLED:true}
+
+      max-results: ${SUPPORTFORGE_MEMORY_HISTORY_MAX_RESULTS:3}
+
+      max-item-chars: ${SUPPORTFORGE_MEMORY_HISTORY_MAX_ITEM_CHARS:800}
+
+      min-score: ${SUPPORTFORGE_MEMORY_HISTORY_MIN_SCORE:1.0}
+
+    profile:
+      enabled: ${SUPPORTFORGE_MEMORY_PROFILE_ENABLED:true}

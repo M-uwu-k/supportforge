@@ -1,0 +1,256 @@
+services:
+  supportforge:
+    environment:
+      SPRING_PROFILES_ACTIVE: enterprise
+      SUPPORTFORGE_AUTH_REQUIRED: "true"
+      SUPPORTFORGE_AUTH_CREDENTIALS_JSON: ${SUPPORTFORGE_AUTH_CREDENTIALS_JSON:?请先运行scripts/Initialize-LanAccess.ps1}
+      SUPPORTFORGE_FEATURE_POSTGRES_PERSISTENCE: "true"
+      SUPPORTFORGE_FEATURE_OBJECT_STORAGE: "true"
+      SUPPORTFORGE_FEATURE_QDRANT_RETRIEVAL: "true"
+      SUPPORTFORGE_FEATURE_KAFKA_INDEXING: "true"
+      SUPPORTFORGE_FEATURE_GROUNDING_HARNESS: "true"
+      SUPPORTFORGE_FEATURE_DISTRIBUTED_CACHE: "true"
+      SUPPORTFORGE_FEATURE_MULTI_TENANCY: "true"
+      SUPPORTFORGE_OTLP_TRACING_ENABLED: ${SUPPORTFORGE_OTLP_TRACING_ENABLED:-true}
+      SUPPORTFORGE_OTLP_TRACING_ENDPOINT: http://otel-collector:4318/v1/traces
+      SUPPORTFORGE_TRACING_SAMPLE_PROBABILITY: ${SUPPORTFORGE_TRACING_SAMPLE_PROBABILITY:-1.0}
+      MANAGEMENT_ENDPOINT_HEALTH_GROUP_READINESS_INCLUDE: readinessState,postgres
+      SUPPORTFORGE_POSTGRES_URL: jdbc:postgresql://postgres:5432/supportforge
+      SUPPORTFORGE_POSTGRES_USERNAME: ${SUPPORTFORGE_POSTGRES_USERNAME:-supportforge}
+      SUPPORTFORGE_POSTGRES_PASSWORD: ${SUPPORTFORGE_POSTGRES_PASSWORD:-supportforge-local-only}
+      SUPPORTFORGE_POSTGRES_SCHEMA: supportforge
+      SUPPORTFORGE_PERSISTENCE_INTENT_LEARNING: postgres
+      SUPPORTFORGE_PERSISTENCE_KNOWLEDGE: postgres
+      SUPPORTFORGE_PERSISTENCE_MEMORY: postgres
+      SUPPORTFORGE_PERSISTENCE_FEEDBACK: postgres
+      SUPPORTFORGE_PERSISTENCE_EVALUATION: postgres
+      SUPPORTFORGE_DEFAULT_TENANT_ID: 00000000-0000-0000-0000-000000000001
+      SUPPORTFORGE_MEMORY_EPISODE_MAX_RESULTS: ${SUPPORTFORGE_MEMORY_EPISODE_MAX_RESULTS:-3}
+      SUPPORTFORGE_MEMORY_EPISODE_MINIMUM_SCORE: ${SUPPORTFORGE_MEMORY_EPISODE_MINIMUM_SCORE:-0.15}
+      SUPPORTFORGE_VALKEY_URI: redis://valkey:6379
+      SUPPORTFORGE_EMBEDDING_PROVIDER: ${SUPPORTFORGE_EMBEDDING_PROVIDER:-mock}
+      SUPPORTFORGE_EMBEDDING_MODEL: ${SUPPORTFORGE_EMBEDDING_MODEL:-Qwen/Qwen3-Embedding-0.6B}
+      SUPPORTFORGE_EMBEDDING_MODEL_VERSION: ${SUPPORTFORGE_EMBEDDING_MODEL_VERSION:-qwen3-embedding-v1}
+      SUPPORTFORGE_EMBEDDING_ENDPOINT: ${SUPPORTFORGE_EMBEDDING_ENDPOINT:-http://host.docker.internal:8000/v1/embeddings}
+      SUPPORTFORGE_EMBEDDING_API_KEY: ${SUPPORTFORGE_EMBEDDING_API_KEY:-}
+      SUPPORTFORGE_EMBEDDING_DIMENSIONS: ${SUPPORTFORGE_EMBEDDING_DIMENSIONS:-1024}
+      SUPPORTFORGE_EMBEDDING_BATCH_SIZE: ${SUPPORTFORGE_EMBEDDING_BATCH_SIZE:-10}
+      SUPPORTFORGE_EMBEDDING_TIMEOUT: ${SUPPORTFORGE_EMBEDDING_TIMEOUT:-30s}
+      SUPPORTFORGE_EMBEDDING_NORMALIZE: ${SUPPORTFORGE_EMBEDDING_NORMALIZE:-true}
+      SUPPORTFORGE_OBJECT_STORAGE_PROVIDER: s3
+      SUPPORTFORGE_OBJECT_STORAGE_ENDPOINT: http://minio:9000
+      SUPPORTFORGE_OBJECT_STORAGE_ACCESS_KEY: ${SUPPORTFORGE_OBJECT_STORAGE_ACCESS_KEY:-supportforge-minio}
+      SUPPORTFORGE_OBJECT_STORAGE_SECRET_KEY: ${SUPPORTFORGE_OBJECT_STORAGE_SECRET_KEY:-supportforge-minio-local-only}
+      SUPPORTFORGE_OBJECT_STORAGE_BUCKET: ${SUPPORTFORGE_OBJECT_STORAGE_BUCKET:-supportforge-knowledge}
+      SUPPORTFORGE_OBJECT_STORAGE_REGION: ${SUPPORTFORGE_OBJECT_STORAGE_REGION:-us-east-1}
+      SUPPORTFORGE_OBJECT_STORAGE_AUTO_CREATE_BUCKET: "true"
+      SUPPORTFORGE_QDRANT_PROVIDER: qdrant
+      SUPPORTFORGE_QDRANT_ENDPOINT: http://qdrant:6333
+      SUPPORTFORGE_QDRANT_API_KEY: ${SUPPORTFORGE_QDRANT_API_KEY:-}
+      SUPPORTFORGE_QDRANT_COLLECTION: ${SUPPORTFORGE_QDRANT_COLLECTION:-supportforge_knowledge_v1}
+      SUPPORTFORGE_QDRANT_DENSE_VECTOR_NAME: ${SUPPORTFORGE_QDRANT_DENSE_VECTOR_NAME:-qwen3_dense}
+      SUPPORTFORGE_QDRANT_INDEX_VERSION: ${SUPPORTFORGE_QDRANT_INDEX_VERSION:-knowledge-qwen3-v1}
+      SUPPORTFORGE_QDRANT_DIMENSIONS: ${SUPPORTFORGE_QDRANT_DIMENSIONS:-1024}
+      SUPPORTFORGE_QDRANT_DISTANCE: Cosine
+      SUPPORTFORGE_QDRANT_SHARD_NUMBER: ${SUPPORTFORGE_QDRANT_SHARD_NUMBER:-1}
+      SUPPORTFORGE_QDRANT_REPLICATION_FACTOR: ${SUPPORTFORGE_QDRANT_REPLICATION_FACTOR:-1}
+      SUPPORTFORGE_QDRANT_WRITE_CONSISTENCY_FACTOR: ${SUPPORTFORGE_QDRANT_WRITE_CONSISTENCY_FACTOR:-1}
+      SUPPORTFORGE_QDRANT_UPSERT_BATCH_SIZE: ${SUPPORTFORGE_QDRANT_UPSERT_BATCH_SIZE:-64}
+      SUPPORTFORGE_QDRANT_TIMEOUT: ${SUPPORTFORGE_QDRANT_TIMEOUT:-10s}
+      SUPPORTFORGE_RETRIEVAL_CANDIDATE_LIMIT: ${SUPPORTFORGE_RETRIEVAL_CANDIDATE_LIMIT:-100}
+      SUPPORTFORGE_RETRIEVAL_DEFAULT_LIMIT: ${SUPPORTFORGE_RETRIEVAL_DEFAULT_LIMIT:-8}
+      SUPPORTFORGE_RETRIEVAL_MAXIMUM_LIMIT: ${SUPPORTFORGE_RETRIEVAL_MAXIMUM_LIMIT:-50}
+      SUPPORTFORGE_RETRIEVAL_RRF_K: ${SUPPORTFORGE_RETRIEVAL_RRF_K:-60}
+      SUPPORTFORGE_RERANKER_PROVIDER: ${SUPPORTFORGE_RERANKER_PROVIDER:-mock}
+      SUPPORTFORGE_RERANKER_MODEL: ${SUPPORTFORGE_RERANKER_MODEL:-Qwen/Qwen3-Reranker-0.6B}
+      SUPPORTFORGE_RERANKER_MODEL_VERSION: ${SUPPORTFORGE_RERANKER_MODEL_VERSION:-qwen3-reranker-v1}
+      SUPPORTFORGE_RERANKER_ENDPOINT: ${SUPPORTFORGE_RERANKER_ENDPOINT:-http://host.docker.internal:8001/v1/rerank}
+      SUPPORTFORGE_RERANKER_API_KEY: ${SUPPORTFORGE_RERANKER_API_KEY:-}
+      SUPPORTFORGE_RERANKER_BATCH_SIZE: ${SUPPORTFORGE_RERANKER_BATCH_SIZE:-32}
+      SUPPORTFORGE_RERANKER_CANDIDATE_LIMIT: ${SUPPORTFORGE_RERANKER_CANDIDATE_LIMIT:-30}
+      SUPPORTFORGE_RERANKER_MINIMUM_SCORE: ${SUPPORTFORGE_RERANKER_MINIMUM_SCORE:-0.0}
+      SUPPORTFORGE_RERANKER_TIMEOUT: ${SUPPORTFORGE_RERANKER_TIMEOUT:-20s}
+      SUPPORTFORGE_RERANKER_FAIL_OPEN: ${SUPPORTFORGE_RERANKER_FAIL_OPEN:-true}
+      SUPPORTFORGE_GROUNDING_MAXIMUM_EVIDENCE: ${SUPPORTFORGE_GROUNDING_MAXIMUM_EVIDENCE:-5}
+      SUPPORTFORGE_GROUNDING_MINIMUM_RERANK_SCORE: ${SUPPORTFORGE_GROUNDING_MINIMUM_RERANK_SCORE:-0.12}
+      SUPPORTFORGE_GROUNDING_MINIMUM_QUERY_COVERAGE: ${SUPPORTFORGE_GROUNDING_MINIMUM_QUERY_COVERAGE:-0.30}
+      SUPPORTFORGE_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SUPPORTFORGE_KAFKA_KNOWLEDGE_TOPIC: supportforge.knowledge.index.v1
+      SUPPORTFORGE_KAFKA_DLT_TOPIC: supportforge.knowledge.index.v1.dlt
+      SUPPORTFORGE_KAFKA_CONSUMER_GROUP: supportforge-knowledge-indexer-v1
+    depends_on:
+      otel-collector:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    healthcheck:
+      timeout: 10s
+
+  otel-collector:
+    image: otel/opentelemetry-collector:0.165.0
+    container_name: supportforge-otel-collector
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./config/otel-collector.yaml:/etc/otelcol/config.yaml:ro
+    depends_on:
+      jaeger:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - supportforge-network
+
+  jaeger:
+    image: cr.jaegertracing.io/jaegertracing/jaeger:2.23.0
+    container_name: supportforge-jaeger
+    ports:
+      - "127.0.0.1:${SUPPORTFORGE_JAEGER_UI_PORT:-16686}:16686"
+    restart: unless-stopped
+    networks:
+      - supportforge-network
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: supportforge-postgres
+    environment:
+      POSTGRES_DB: supportforge
+      POSTGRES_USER: ${SUPPORTFORGE_POSTGRES_USERNAME:-supportforge}
+      POSTGRES_PASSWORD: ${SUPPORTFORGE_POSTGRES_PASSWORD:-supportforge-local-only}
+    ports:
+      - "127.0.0.1:${SUPPORTFORGE_POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - supportforge-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
+        ]
+      interval: 5s # 相邻检查间隔
+      timeout: 5s # 单次健康命令的超时
+      start_period: 10s # 初始化宽限期内失败暂不累计到重试上限；成功仍可标记健康
+      retries: 12 # 连续失败达到上限后标记unhealthy
+    restart: unless-stopped # 容器退出时的重启策略；健康状态unhealthy本身不等于进程已退出
+    networks:
+      - supportforge-network
+
+  minio:
+    image: pgsty/silo:RELEASE.2026-11-12T00-00-00Z
+    container_name: supportforge-silo
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${SUPPORTFORGE_OBJECT_STORAGE_ACCESS_KEY:-supportforge-minio}
+      MINIO_ROOT_PASSWORD: ${SUPPORTFORGE_OBJECT_STORAGE_SECRET_KEY:-supportforge-minio-local-only}
+    ports:
+      - "127.0.0.1:${SUPPORTFORGE_MINIO_API_PORT:-9000}:9000"
+      - "127.0.0.1:${SUPPORTFORGE_MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - supportforge-minio-data:/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f http://localhost:9000/minio/health/live || exit 1"
+        ]
+      interval: 5s
+      timeout: 5s
+      start_period: 10s
+      retries: 12
+    restart: unless-stopped
+    networks:
+      - supportforge-network
+
+  qdrant:
+    image: qdrant/qdrant:v1.20.1
+    container_name: supportforge-qdrant
+    ports:
+      - "127.0.0.1:${SUPPORTFORGE_QDRANT_HTTP_PORT:-6333}:6333"
+      - "127.0.0.1:${SUPPORTFORGE_QDRANT_GRPC_PORT:-6334}:6334"
+    volumes:
+      - supportforge-qdrant-data:/qdrant/storage
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "bash -c ':> /dev/tcp/127.0.0.1/6333' || exit 1"
+        ]
+      interval: 5s
+      timeout: 5s
+      start_period: 10s
+      retries: 12
+    restart: unless-stopped
+    networks:
+      - supportforge-network
+
+  kafka:
+    image: apache/kafka:4.4.0
+    container_name: supportforge-kafka
+    ports:
+      - "127.0.0.1:${SUPPORTFORGE_KAFKA_HOST_PORT:-29092}:29092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: CONTROLLER://:9093,PLAINTEXT://:9092,PLAINTEXT_HOST://:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    volumes:
+      - supportforge-kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1 || exit 1"
+        ]
+      interval: 5s
+      timeout: 10s
+      start_period: 20s
+      retries: 18
+    restart: unless-stopped
+    networks:
+      - supportforge-network
+
+  valkey:
+    image: valkey/valkey:9.1.4-alpine
+    container_name: supportforge-valkey
+    command: ["valkey-server", "--appendonly", "yes"]
+    ports:
+      - "127.0.0.1:${SUPPORTFORGE_VALKEY_PORT:-6379}:6379"
+    volumes:
+      - supportforge-valkey-data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      start_period: 5s
+      retries: 12
+    restart: unless-stopped
+    networks:
+      - supportforge-network
+
+  prometheus:
+    volumes:
+      - ./config/prometheus.enterprise.yml:/etc/prometheus/prometheus.yml:ro
+      - ./data/lan-access/prometheus.token:/etc/prometheus/backend.token:ro
+
+volumes:
+  supportforge-postgres-data:
+  supportforge-minio-data:
+  supportforge-qdrant-data:
+  supportforge-kafka-data:
+  supportforge-valkey-data:
+

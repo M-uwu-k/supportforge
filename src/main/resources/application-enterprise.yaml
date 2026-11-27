@@ -1,0 +1,34 @@
+spring:
+  config:
+    activate:
+      on-profile: enterprise
+
+management:
+  tracing:
+    export:
+      otlp:
+        enabled: ${SUPPORTFORGE_OTLP_TRACING_ENABLED:true}
+
+supportforge:
+  deployment:
+    environment: enterprise
+
+  features:
+    postgres-persistence: ${SUPPORTFORGE_FEATURE_POSTGRES_PERSISTENCE:false}
+    qdrant-retrieval: ${SUPPORTFORGE_FEATURE_QDRANT_RETRIEVAL:false}
+    object-storage: ${SUPPORTFORGE_FEATURE_OBJECT_STORAGE:false}
+    kafka-indexing: ${SUPPORTFORGE_FEATURE_KAFKA_INDEXING:false}
+    distributed-cache: ${SUPPORTFORGE_FEATURE_DISTRIBUTED_CACHE:false}
+    multi-tenancy: ${SUPPORTFORGE_FEATURE_MULTI_TENANCY:false}
+    grounding-harness: ${SUPPORTFORGE_FEATURE_GROUNDING_HARNESS:false}
+
+  database:
+    url: ${SUPPORTFORGE_POSTGRES_URL:jdbc:postgresql://localhost:5432/supportforge}
+    username: ${SUPPORTFORGE_POSTGRES_USERNAME:supportforge}
+    password: ${SUPPORTFORGE_POSTGRES_PASSWORD:}
+    schema: ${SUPPORTFORGE_POSTGRES_SCHEMA:supportforge}
+    maximum-pool-size: ${SUPPORTFORGE_POSTGRES_MAXIMUM_POOL_SIZE:20}
+    minimum-idle: ${SUPPORTFORGE_POSTGRES_MINIMUM_IDLE:2}
+    connection-timeout: ${SUPPORTFORGE_POSTGRES_CONNECTION_TIMEOUT:5s}
+    migration-enabled: ${SUPPORTFORGE_POSTGRES_MIGRATION_ENABLED:true}
+

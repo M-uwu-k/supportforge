@@ -1,0 +1,39 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+
+supportforge:
+  deployment:
+    environment: test
+    instance-id: test-instance
+
+  llm:
+    provider: mock
+    model: mock-v1 # 模拟响应里的模型标识，不是加载了一个名为mock-v1的真实大模型
+
+  features:
+    postgres-persistence: false
+    qdrant-retrieval: false
+    object-storage: false
+    kafka-indexing: false
+    distributed-cache: false
+    multi-tenancy: false
+    grounding-harness: false
+
+  test-run-id: ${random.uuid}
+  knowledge:
+    storage-path: target/test-data/${supportforge.test-run-id}/knowledge-documents.json
+  object-storage:
+    provider: filesystem # 测试保存上传原文件时使用本地实现，不访问S3
+    filesystem-root: target/test-data/${supportforge.test-run-id}/object-storage
+  memory:
+    storage-path: target/test-data/${supportforge.test-run-id}/conversation-memory.json
+  feedback:
+    storage-path: target/test-data/${supportforge.test-run-id}/feedback.json
+  evaluation:
+    report-path: target/test-data/${supportforge.test-run-id}/evaluation-reports.json
+  intent:
+    learning:
+      storage-path: target/test-data/${supportforge.test-run-id}/intent-learning.json
+

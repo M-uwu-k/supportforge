@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {
+      "id": "password-reset-grounded",
+      "query": "密码重置后多久生效",
+      "categories": ["account"],
+      "expected_point_ids": ["11111111-1111-1111-1111-111111111111"],
+      "expected_allowed": true,
+      "answer": "密码重置后立即生效",
+      "cited_point_ids": ["11111111-1111-1111-1111-111111111111"]
+    },
+    {
+      "id": "unsupported-price-refusal",
+      "query": "不存在的产品价格是多少",
+      "categories": ["pricing"],
+      "expected_point_ids": [],
+      "expected_allowed": false,
+      "answer": "",
+      "cited_point_ids": []
+    }
+  ]
+}

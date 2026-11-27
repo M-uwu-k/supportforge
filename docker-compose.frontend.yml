@@ -1,0 +1,22 @@
+services:
+  supportforge-web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: supportforge-web
+    ports:
+      - "${SUPPORTFORGE_WEB_PORT:-3000}:8080"
+    depends_on:
+      supportforge:
+        condition: service_healthy
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - supportforge-network

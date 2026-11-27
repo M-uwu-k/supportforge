@@ -1,0 +1,32 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+  external_labels:
+    application: supportforge
+
+scrape_configs:
+  - job_name: supportforge
+
+    metrics_path: /actuator/prometheus
+
+    http_headers:
+      X-Tenant-Id:
+        values: ["00000000-0000-0000-0000-000000000001"]
+      X-Actor-Id:
+        values: ["prometheus"]
+      X-Roles:
+        values: ["AUDITOR"]
+
+    static_configs:
+      - targets:
+          - supportforge:7000
+
+        labels:
+          service: supportforge
+
+  - job_name: prometheus
+
+    static_configs:
+      - targets:
+          - localhost:9090

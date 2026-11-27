@@ -1,0 +1,9 @@
+[
+  {
+    "id": "step6-object-storage-validation",
+    "title": "对象存储真实验收知识",
+    "category": "TECHNICAL",
+    "content": "上传原件必须先保存到S3兼容对象存储，并记录校验和与对象键。",
+    "keywords": ["对象存储", "校验和", "S3"]
+  }
+]

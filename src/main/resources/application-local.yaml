@@ -1,0 +1,21 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+
+supportforge:
+  deployment:
+    environment: local
+
+  features:
+    postgres-persistence: false # 不启用企业PostgreSQL设施，正常默认业务保存仍走JSON实现
+    qdrant-retrieval: false # 不连接企业Qdrant链路，本地检索/向量实现仍可存在
+    object-storage: false # 不放行S3企业实现，下面filesystem依然可以保存本地文件
+    kafka-indexing: false # 不要求Kafka消息与后台索引设施
+    distributed-cache: false # 不启用跨实例共享缓存，本地缓存不由此一并关闭
+    multi-tenancy: false # 企业多租户隔离链路默认关闭
+    grounding-harness: false # 企业证据准入/拒答链路默认关闭
+
+  object-storage:
+    provider: filesystem
+

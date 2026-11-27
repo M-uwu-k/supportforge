@@ -1,0 +1,11 @@
+package com.supportforge.migration;
+
+enum LegacyItemKind {
+    MEMORY_PROFILE,
+    MEMORY_CONVERSATION,
+    KNOWLEDGE_DOCUMENT,
+    INTENT_SAMPLE,
+    FEEDBACK_ANSWER,
+    FEEDBACK_RATING,
+    EVALUATION_REPORT
+}
