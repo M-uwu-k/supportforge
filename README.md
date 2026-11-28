@@ -1,74 +1,44 @@
 # SupportForge
 
-SupportForge 是一个基于 Java 21 和 Spring Boot 的企业级智能客服项目，包含多 Agent 路由、混合检索、Grounding、会话记忆、知识管理、反馈评测、多租户权限和 React 管理工作台。
+[简体中文](README.zh-CN.md) · [Architecture](docs/architecture.md) · [Retrieval benchmark](docs/benchmark.md)
 
-项目默认使用 Mock LLM 和本地存储，可以离线运行。企业模式可接入 OpenAI-compatible LLM、Embedding、Reranker、PostgreSQL、Qdrant、Kafka、Valkey 和 S3 兼容对象存储。
+SupportForge is a Java 21 customer support workbench for billing, account and product questions. It routes each request to a support agent, looks up tenant-authorized knowledge, and returns an answer with citations. If the evidence is missing or the answer fails verification, the workbench asks for more information or suggests human review.
 
-## 核心流程
+The local profile runs with mock providers. The enterprise profile connects to a chat model, an embedding service and a reranker through configurable APIs.
 
-```text
-请求
-  -> 可信身份与租户上下文
-  -> 会话记忆与意图识别
-  -> Agent 路由和业务规则
-  -> Embedding + Qdrant 混合召回
-  -> ACL + Reranker + 当前版本核验
-  -> Grounding 证据准入
-  -> LLM 生成
-  -> 引用、数字和业务边界校验
-  -> 回答、证据与检索轨迹
-```
+## Enterprise demo
 
-## 技术栈
+Both captures are from the local enterprise deployment with live model APIs. The questions and the storefront policy were written for the demo.
 
-- Java 21、Spring Boot 4、Maven
-- PostgreSQL、Flyway、HikariCP
-- Qdrant、Qwen3 Embedding、Qwen3 Reranker
-- Kafka、Transactional Outbox
-- Caffeine、Valkey
-- S3-compatible object storage
-- Micrometer、Prometheus、OpenTelemetry、Jaeger
-- React、TypeScript、Vite、Nginx
+**Refund policy with a citation.** The billing agent quotes the seven-business-day policy and links the exact source used for the answer.
 
-## 主要能力
+![SupportForge refund answer with a verified citation and billing agent routing](docs/images/enterprise-answer.jpg)
 
-- 规则、向量和 LLM 融合意图识别
-- 多 Agent 路由、并行处理和安全降级
-- Dense + BM25 + RRF 混合召回
-- 文档 ACL、当前版本核验和 Grounding 拒答
-- 引用证据、检索 Trace 和回答 Guard
-- PostgreSQL 会话、摘要、情景记忆和用户事实
-- Caffeine/Valkey 两级缓存
-- 知识上传、分页浏览、全文查看和幂等导入
-- 反馈、评测、质量门禁和可观测性
-- 多租户、RBAC、资源 ACL 和审计
+<details>
+<summary>See what happens when the answer fails verification</summary>
 
-## 本地运行
+The second request has no admissible citation in the generated answer. SupportForge withholds that answer and shows the verification failure.
 
-环境要求：
+![SupportForge answer withheld after citation verification failed](docs/images/enterprise-guard.jpg)
 
-- JDK 21
-- Maven 3.9+，也可使用仓库中的 Maven Wrapper
-- Node.js 20+（仅前端需要）
-- Docker Desktop（仅企业模式需要）
+</details>
 
-启动后端：
+## Quick start
+
+**Backend** · JDK 21 and the Maven Wrapper. The default profile needs no API key.
 
 ```powershell
-./mvnw.cmd spring-boot:run
+.\mvnw.cmd spring-boot:run
 ```
 
-默认地址：`http://localhost:7000`。默认 Profile 使用 Mock LLM，不需要 API Key。
-
-调用聊天接口：
+Use `./mvnw spring-boot:run` on Linux or macOS. The API listens on `http://localhost:7000`.
 
 ```powershell
-curl.exe -X POST "http://localhost:7000/chat" `
-  -H "Content-Type: application/json" `
-  -d '{"message":"订单A12345重复扣款99元，应该怎么办？","user_id":"demo-user"}'
+$body = @{ message = 'How do I request a refund?'; user_id = 'demo-user' } | ConvertTo-Json
+Invoke-RestMethod http://localhost:7000/chat -Method Post -ContentType 'application/json' -Body $body
 ```
 
-## 前端
+**Workbench** · With the backend running, use Node.js 22 and open the URL printed by Vite.
 
 ```powershell
 cd frontend
@@ -76,75 +46,36 @@ npm ci
 npm run dev
 ```
 
-前端默认通过开发代理访问后端。生产镜像由 `frontend/Dockerfile` 构建。
+### Enterprise deployment
 
-## 自动化测试
-
-后端：
+From the repository root, copy [the environment template](.env.example) to `.env`. Set the model, endpoint and key for each provider in the `SUPPORTFORGE_LLM_*`, `SUPPORTFORGE_EMBEDDING_*` and `SUPPORTFORGE_RERANKER_*` groups. Use `openai-compatible` for the chat and embedding providers and `vllm` for the reranker provider. Fill in the deployment settings referenced by Compose, then run:
 
 ```powershell
-mvn verify
+.\scripts\Initialize-LanAccess.ps1
+docker compose -f docker-compose.yml -f docker-compose.enterprise.yml -f docker-compose.frontend.yml up --build -d
 ```
 
-前端：
+Open `http://localhost:3000`. In **企业设置**, use the local agent token from `data/lan-access/tokens.json` to verify the connection. The backend readiness endpoint is `http://localhost:7000/actuator/health/readiness`. Keep `.env` and the token file local.
 
-```powershell
-cd frontend
-npm ci
-npm test
-npm run build
-```
+## Retrieval results
 
-## 企业模式
+The C-MTEB EcomRetrieval run used 100,902 passages and 1,000 queries. With real embeddings and Qdrant, Dense-only reached **85.10% Recall@10** and **173.21 ms offline P95**. Reranking raised hybrid RRF from 76.20% to 83.80% Recall@10, with P95 increasing from 170.82 ms to 1,043.32 ms. See the [full results and reproduction steps](docs/benchmark.md).
 
-先创建本地配置：
+## Verification
 
-```powershell
-Copy-Item .env.example .env
-./scripts/Initialize-LanAccess.ps1
-```
+| Check | Command |
+| --- | --- |
+| Backend tests and quality gates | `./mvnw verify` or `.\mvnw.cmd verify` |
+| Workbench | In `frontend`, run `npm ci`, `npm test` and `npm run build` |
+| Live enterprise wiring | `.\scripts\Test-EnterpriseWiring.ps1` after the enterprise stack is running |
 
-在 `.env` 中配置真实模型和基础设施参数，然后启动完整环境：
+The enterprise wiring check imports demo data and can use paid model APIs. The [GitHub Actions workflow](.github/workflows/quality-gates.yml) also validates Compose and builds the production image.
 
-```powershell
-docker compose `
-  -f docker-compose.yml `
-  -f docker-compose.enterprise.yml `
-  -f docker-compose.frontend.yml `
-  up --build -d
-```
+## Repository map
 
-企业工作台默认地址：`http://localhost:3000`。
-
-真实接线检查会写入演示数据并可能调用收费模型，请在确认配置后手动执行：
-
-```powershell
-./scripts/Test-EnterpriseWiring.ps1
-```
-
-## 配置和密钥
-
-- 不要提交 `.env`。
-- 不要提交 `data/lan-access/`、运行数据、备份或日志。
-- `.env.example` 只包含示例值和空凭据。
-- 正式环境应通过 Secret Manager、Kubernetes Secret 或 CI/CD Secret 注入密钥。
-- LAN Token 仅用于本地演示，生产应接入 API Gateway、IdP 和 TLS。
-
-## 目录结构
-
-```text
-src/main/java       后端源码
-src/test/java       后端测试
-src/main/resources  配置、Prompt 和 Flyway Migration
-frontend            React/TypeScript 工作台
-config              Prometheus 与 OpenTelemetry 配置
-deploy              Kubernetes 部署模板
-scripts             运维、迁移和验收脚本
-skills              运行时客服 Skill
-```
-
-## 说明
-
-- Qdrant、Valkey 和本地缓存都是可重建数据，PostgreSQL 是企业业务事实源。
-- `escalated=true` 表示建议转人工，不代表已经接通真实呼叫中心。
-- Compose 和 Kubernetes 文件是部署模板，正式上线前仍需完成 TLS、Secret、高可用、容量和灾备配置。
+| Path | Contents |
+| --- | --- |
+| [`src/main/java/com/supportforge`](src/main/java/com/supportforge) | Agent routing, retrieval, grounding, persistence and evaluation |
+| [`frontend`](frontend) | React and TypeScript workbench |
+| [`scripts`](scripts) | Provider checks, dataset import and benchmark commands |
+| [`deploy`](deploy) | Kubernetes deployment templates |
